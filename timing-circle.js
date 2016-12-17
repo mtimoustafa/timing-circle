@@ -15,6 +15,7 @@ $(function() {
   var startTime;
   var currentBeat = 0;
   var stopAnim = true;
+  var canvasClickPos = {X: 0, Y: 0};
   
   // Animation methods courtesy of http://www.html5canvastutorials.com/advanced/html5-canvas-animation-stage/
   window.requestAnimFrame = (function(callback) {
@@ -83,6 +84,7 @@ $(function() {
       });
     } else {
       initCanvas();
+      balloonEffect(canvasClickPos.X, canvasClickPos.Y);
     }
   }
   
@@ -103,6 +105,13 @@ $(function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
   
+  function balloonEffect(x, y) {
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, Math.PI*2, true);
+    ctx.fillStyle = "blue";
+    ctx.fill();
+  }
+  
   function initTimingCircle() {
     // Attach canvas
     var $wrapper = $('#tc-timing-circle');
@@ -111,18 +120,16 @@ $(function() {
     canvas = $canvas[0];
     ctx = $canvas[0].getContext("2d");
     
-    // Attach start/stop button and hook to canvas
-    var $onOffBtn = $('<button/>', {id: 'tc-on-off', text: "Start"});
-    $wrapper.append($onOffBtn);
-    $onOffBtn.click(function() {
+    // Clicking canvas toggles animation start/stop
+    $canvas.click(function(e) {
+      // Click position detection from Stack Overflow - thanks!
+      // http://stackoverflow.com/questions/3234977/using-jquery-how-to-get-click-coordinates-on-the-target-element
+      canvasClickPos.X = e.pageX - $(this).offset().left;
+      canvasClickPos.Y = e.pageY - $(this).offset().top;
       stopAnim = !stopAnim;
-      console.log($onOffBtn.text());
-    	if ($onOffBtn.text() === "Start") {
+    	if (!stopAnim) {
       	startTime = (new Date()).getTime();
-        $onOffBtn.text("Stop");
         animateCanvas();
-      } else {
-        $onOffBtn.text("Start");
       }
     });
     
