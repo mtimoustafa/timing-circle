@@ -4,6 +4,7 @@ $(function() {
   var beats = 5;
   var divisions = 4;
   var anchorR = 5; // %
+  var beatR = 3; // %
   var headR = 2.5; // %
   var padding = 5; // %
   // ==================================
@@ -13,6 +14,7 @@ $(function() {
   var frameR;
   var startTime;
   var currentBeat = 0;
+  var stopAnim = true;
   
   // Animation methods courtesy of http://www.html5canvastutorials.com/advanced/html5-canvas-animation-stage/
   window.requestAnimFrame = (function(callback) {
@@ -27,8 +29,10 @@ $(function() {
     // Draw circular track
     ctx.beginPath();
     ctx.arc(canvas.width/2, canvas.height/2, frameR, 0, Math.PI*2, true);
-    ctx.strokeStyle = "#666";
+    ctx.strokeStyle = "#D60500";
+    ctx.lineWidth = 3.0;
     ctx.stroke();
+    ctx.lineWidth = 1.0;
     
     // Draw beat markers
     var angle; var newX; var newY;
@@ -38,10 +42,9 @@ $(function() {
       newY = canvas.height/2 - (canvas.height/2-padding)*Math.cos(angle);
       
       ctx.beginPath();
-      ctx.moveTo(newX, newY);
-      ctx.lineTo(canvas.width/2 - (anchorR)*Math.sin(angle), canvas.height/2 - (anchorR)*Math.cos(angle));
-      ctx.strokeStyle = "#666";
-      ctx.stroke();
+      ctx.arc(newX, newY, beatR, 0, Math.PI*2, true);
+      ctx.fillStyle = "#D60500";
+      ctx.fill();
     }
     
     // Draw anchor
@@ -58,72 +61,79 @@ $(function() {
     var newX = canvas.width/2 - (canvas.width/2-padding)*Math.sin(angle);
     var newY = canvas.height/2 - (canvas.height/2-padding)*Math.cos(angle);
 
-    // clear
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+    clearCanvas();
     drawBg();
 
     // Draw arm
     ctx.beginPath();
     ctx.moveTo(newX,newY);
     ctx.lineTo(canvas.width/2 - (anchorR)*Math.sin(angle), canvas.height/2 - (anchorR)*Math.cos(angle));
-    ctx.strokeStyle = "#D60500";
+    ctx.strokeStyle = "gray";
     ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.lineWidth = 1.0;
-    
-    // Draw arm head
-    ctx.beginPath();
-    ctx.arc(newX, newY, headR, 0, Math.PI*2, true);
-    ctx.fillStyle = "red";
-    ctx.fill();
     
     // Update beat counter
     currentBeat = Math.floor(bpmTime);
 
     // Request new frame
-    requestAnimFrame(function() {
-      animateCanvas();
-    });
+    if (!stopAnim) {
+      requestAnimFrame(function() {
+        animateCanvas();
+      });
+    } else {
+      initCanvas();
+    }
   }
   
   function initCanvas() {
+    clearCanvas();
     drawBg();
     
     // Draw arm
     ctx.beginPath();
     ctx.moveTo(canvas.width/2, padding);
     ctx.lineTo(canvas.width/2, canvas.height/2 - anchorR);
-    ctx.strokeStyle = "#D60500";
+    ctx.strokeStyle = "gray";
     ctx.lineWidth = 1.5;
     ctx.stroke();
-    
-    // Draw arm head
-    ctx.beginPath();
-    ctx.arc(canvas.width/2, padding, headR, 0, Math.PI*2, true);
-    ctx.fillStyle = "red";
-    ctx.fill();
-  };
+  }
+  
+  function clearCanvas () {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
   
   function initTimingCircle() {
+    // Attach canvas
     var $wrapper = $('#tc-timing-circle');
-    
-    var $canvas = $('<canvas/>', {id: 'tc-canvas', position: 'absolute'}).prop({width: $wrapper.width(), height: $wrapper.width()}).css({position: 'absolute'});
+    var $canvas = $('<canvas/>', {id: 'tc-canvas'}).prop({width: $wrapper.width(), height: $wrapper.width()});
     $canvas.appendTo($wrapper);
     canvas = $canvas[0];
     ctx = $canvas[0].getContext("2d");
     
+    // Attach start/stop button and hook to canvas
+    var $onOffBtn = $('<button/>', {id: 'tc-on-off', text: "Start"});
+    $wrapper.append($onOffBtn);
+    $onOffBtn.click(function() {
+      stopAnim = !stopAnim;
+      console.log($onOffBtn.text());
+    	if ($onOffBtn.text() === "Start") {
+      	startTime = (new Date()).getTime();
+        $onOffBtn.text("Stop");
+        animateCanvas();
+      } else {
+        $onOffBtn.text("Start");
+      }
+    });
+    
+    // Set properties to absolute values
     anchorR = canvas.width * anchorR/100;
+    beatR = canvas.width * beatR/100;
     headR = canvas.width * headR/100;
     padding = canvas.width * padding/100;
     frameR = canvas.width/2 - padding;
     
     initCanvas();
-
-    setTimeout(function() {
-        startTime = (new Date()).getTime();
-        animateCanvas();
-      }, 500);
   }
   
   initTimingCircle();
