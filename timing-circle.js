@@ -84,7 +84,6 @@ $(function() {
       });
     } else {
       initCanvas();
-      balloonEffect(canvasClickPos.X, canvasClickPos.Y);
     }
   }
   
@@ -105,13 +104,6 @@ $(function() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
   
-  function balloonEffect(x, y) {
-    ctx.beginPath();
-    ctx.arc(x, y, 10, 0, Math.PI*2, true);
-    ctx.fillStyle = "blue";
-    ctx.fill();
-  }
-  
   function initTimingCircle() {
     // Attach canvas
     var $wrapper = $('#tc-timing-circle');
@@ -119,6 +111,16 @@ $(function() {
     $canvas.appendTo($wrapper);
     canvas = $canvas[0];
     ctx = $canvas[0].getContext("2d");
+    
+    // Accommodate HiDPI displays e.g. Apple retina displays
+    var devicePixelRatio = window.devicePixelRatio || 1;
+    var backingStoreRatio = ctx.webkitBackingStorePixelRatio || ctx.mozBackingStorePixelRatio || ctx.msBackingStorePixelRatio || ctx.oBackingStorePixelRatio || ctx.backingStorePixelRatio || 1;
+    if (devicePixelRatio !== backingStoreRatio) {
+      canvas.width *= devicePixelRatio / backingStoreRatio;
+      canvas.height *= devicePixelRatio / backingStoreRatio;
+      canvas.style.width = $wrapper.width() + 'px';
+      canvas.style.height = $wrapper.height() + 'px';
+    }
     
     // Clicking canvas toggles animation start/stop
     $canvas.click(function(e) {
